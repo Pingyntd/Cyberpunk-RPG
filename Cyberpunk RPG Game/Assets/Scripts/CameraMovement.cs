@@ -6,6 +6,7 @@ public class CameraMovement : MonoBehaviour
 {
 
     public float speed;
+    public int test;
 
     // Update is called once per frame
     void Update()
