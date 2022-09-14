@@ -1,70 +1,84 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
+using TMPro;
 
 public class CharacterMovment : MonoBehaviour
 {
 
+    GameObject selected = null;
+    List<Characteristics> characteristics = new List<Characteristics>();
 
-    public bool isSelected;
-    private bool overCollider = false;
+    public GameObject screenText;
+    private TMP_Text textComponent;
 
-    private bool debugTest = true;
-    Target target;
+    public Tilemap tilemap;
+
+    bool characterSelected = false;
+    bool canMove = true;
 
 
     private void Awake()
     {
-        target = this.GetComponent<Target>();
+        textComponent = screenText.GetComponent<TMP_Text>();
     }
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0)) {
-            if (!overCollider)
-            {
-                isSelected = false;
-                Debug.Log(target.name + "is selected? " + isSelected);
-            }
-        }
 
+        Debug.Log("mouse pos: " + Input.mousePosition);
 
         if (Input.GetMouseButtonDown(0)){
+            canMove = true;
+            Collider2D[] hit = Physics2D.OverlapPointAll(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+            for (int i = 0; i < hit.Length; i++){
 
-            RaycastHit2D hitInfo = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-            //Debug.Log("Test");
-            if ((!(hitInfo.collider.gameObject.tag == "Character"))) //  && (isSelected)
-            {
-                Debug.Log("InMove with " + target.name + "selected");
-                Vector2 lastClickedPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                this.transform.position = lastClickedPos;
+                if (hit[i].gameObject.tag == "Character"){
+                    characteristics = new List<Characteristics>();
+                    characterSelected = true;
+                    selected = hit[i].gameObject;
+                    characteristics.Add(selected.GetComponent<Characteristics>());
+
+                    /*for (int j = 0; j < characteristics.Count; j++) {
+                        Debug.Log(characteristics[j].name);
+                    }*/
+
+                    Debug.Log("Adding character to selected. Character name: " + characteristics[0].name);
+                }
+                else{
+                    characterSelected = false;
+                }
+                for (int j = 0; j < hit.Length; j++) {
+                    if (hit[j].gameObject.tag == "Character") {
+                        canMove = false;
+                    }
+                }
+
+
             }
+
+            if (canMove) {
+                /*Vector2 mousePos = Input.mousePosition;
+                Debug.Log("mouse pos: " + mousePos);
+                Vector3Int cellPos = tilemap.WorldToCell(mousePos);
+                selected.transform.position = tilemap.GetCellCenterWorld(cellPos);*/
+                Vector2 screenPos;
+                Vector2 worldPos;
+
+                screenPos = Input.mousePosition;
+                worldPos = Camera.main.ScreenToWorldPoint(screenPos);
+                Vector3Int cellPos = tilemap.WorldToCell(worldPos);
+                selected.transform.position = tilemap.GetCellCenterWorld(cellPos);
+
+            }
+
+            
         }
 
-        
-    }
-
-    private void OnMouseOver()
-    {
-        if (debugTest) {
-            //Debug.Log("Is hovering over " + target.name);
-            debugTest = false;
+        if (characterSelected){
+            textComponent.text = "Selected Character: " + characteristics[0].name;
+            characterSelected = false;
         }
-        if (Input.GetMouseButtonDown(0)) {
-            //Debug.Log("Clicked on " + target.name);
-        }
-        overCollider = true;
-        
     }
 
-    private void OnMouseExit()
-    {
-        overCollider = false;
-        debugTest = true;
-    }
-
-    private void OnMouseDown()
-    {
-        
-    }
 }
